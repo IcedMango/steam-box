@@ -89,6 +89,43 @@ func (b *Box) GetPlayTime(ctx context.Context, steamID uint64, appID ...uint32) 
 	return lines, nil
 }
 
+// Get recent 2 weeks played time from API.
+func (b *Box) GetRecentPlayTime(ctx context.Context, steamID uint64, appID ...uint32) ([]string, error) {
+	params := &steam.GetOwnedGamesParams{
+		SteamID:                steamID,
+		IncludeAppInfo:         true,
+		IncludePlayedFreeGames: true,
+	}
+	if len(appID) > 0 {
+		params.AppIDsFilter = appID
+	}
+
+	gameRet, err := b.steam.IPlayerService.GetOwnedGames(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	var lines []string
+	var max = 0
+	sort.Slice(gameRet.Games, func(i, j int) bool {
+		return gameRet.Games[i].playtime_2weeks > gameRet.Games[j].playtime_2weeks
+	})
+
+	for _, game := range gameRet.Games {
+		if max >= 5 {
+			break
+		}
+
+		hours := int(math.Floor(float64(game.playtime_2weeks / 60)))
+		mins := int(math.Floor(float64(game.playtime_2weeks % 60)))
+
+		line := pad(getNameEmoji(game.Appid, game.Name), " ", 35) + " " +
+			pad(fmt.Sprintf("🕘 %d hrs %d mins", hours, mins), "", 16)
+		lines = append(lines, line)
+		max++
+	}
+	return lines, nil
+}
+
 func (b *Box) UpdateMarkdown(ctx context.Context, title, filename string, content []byte) error {
 	md, err := ioutil.ReadFile(filename)
 	if err != nil {
