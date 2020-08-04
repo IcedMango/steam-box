@@ -90,7 +90,7 @@ func (b *Box) GetPlayTime(ctx context.Context, steamID uint64, appID ...uint32) 
 }
 
 // Get recent 2 weeks played time from API.
-func (b *Box) GetRecentPlayTime(ctx context.Context, steamID uint64, appID ...uint32) ([]string, error) {
+func (b *Box) GetRecent2WeekPlayTime(ctx context.Context, steamID uint64, appID ...uint32) ([]string, error) {
 	params := &steam.GetOwnedGamesParams{
 		SteamID:                steamID,
 		IncludeAppInfo:         true,
